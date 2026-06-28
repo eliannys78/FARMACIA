@@ -64,8 +64,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "Sistema de Inventario para Farmacia API",
         Version = "v1.0",
-        Description = "API REST para la gestión del inventario de medicamentos de una farmacia. Incluye autenticación JWT, validación de datos y operaciones CRUD documentadas mediante Swagger.",
-        Contact = new OpenApiContact
+        Description = "API REST para la gestión del inventario de medicamentos de una farmacia. Incluye autenticación JWT, validación de datos, arquitectura por capas y documentación mediante Swagger.",        Contact = new OpenApiContact
         {
             Name = "Eliannys Hernández Guzmán",
             Email = "eliannyshernandez07@gmail.com"
