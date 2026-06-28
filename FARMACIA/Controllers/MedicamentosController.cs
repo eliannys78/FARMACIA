@@ -50,7 +50,7 @@ namespace FARMACIA.Controllers
         }
 
         /// <summary>
-        /// Registra un nuevo medicamento.
+        /// Registra un nuevo medicamento en el inventario de la farmacia.
         /// </summary>
         /// <param name="medicamento">Datos del medicamento.</param>
         [HttpPost]
