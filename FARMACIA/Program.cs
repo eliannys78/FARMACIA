@@ -6,7 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using FarmaciaInventario.Infrastructure.Data;
 using FarmaciaInventario.Application.Interfaces;
 using FarmaciaInventario.Infrastructure.Repositories;
-
+using FarmaciaInventario.Application.Services;
+using System.Reflection;
 var builder = WebApplication.CreateBuilder(args);
 
 // Controllers
@@ -22,6 +23,9 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    options.SaveToken = true;
+    options.RequireHttpsMetadata = false;
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -33,12 +37,15 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = builder.Configuration["Jwt:Audience"],
 
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(jwtKey!))
+            Encoding.UTF8.GetBytes(jwtKey!)),
+
+        ClockSkew = TimeSpan.Zero
     };
 });
 
 // Dependency Injection
 builder.Services.AddScoped<IMedicamentoRepository, MedicamentoRepository>();
+builder.Services.AddScoped<IMedicamentoService, MedicamentoService>();
 
 // DbContext
 builder.Services.AddDbContext<FarmaciaDbContext>(options =>
@@ -55,9 +62,18 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Farmacia API",
-        Version = "v1"
+        Title = "Sistema de Inventario para Farmacia API",
+        Version = "v1.0",
+        Description = "API REST desarrollada para la gestión de medicamentos en una farmacia. Permite autenticación mediante JWT y operaciones CRUD sobre el inventario de medicamentos.",
+        Contact = new OpenApiContact
+        {
+            Name = "Eliannys Hernández Guzmán",
+            Email = "eliannyshernandez07@gmail.com"
+        }
     });
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    c.IncludeXmlComments(xmlPath);
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {

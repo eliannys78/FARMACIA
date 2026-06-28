@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+﻿using FarmaciaInventario.Application.Interfaces;
+using FarmaciaInventario.Application.Services;
 using FarmaciaInventario.Domain.Entities;
-using FarmaciaInventario.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FARMACIA.Controllers
 {
@@ -10,23 +11,37 @@ namespace FARMACIA.Controllers
     [ApiController]
     public class MedicamentosController : ControllerBase
     {
-        private readonly IMedicamentoRepository _repository;
+        private readonly IMedicamentoService _service;
 
-        public MedicamentosController(IMedicamentoRepository repository)
+        public MedicamentosController(IMedicamentoService service)
         {
-            _repository = repository;
+            _service = service;
         }
 
+        /// <summary>
+        /// Obtiene la lista de todos los medicamentos registrados.
+        /// </summary>
+        /// <returns>Lista de medicamentos.</returns>
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<IEnumerable<Medicamento>>> GetMedicamentos()
         {
-            return await _repository.GetAllAsync();
+            return await _service.GetAllAsync();
         }
 
+        /// <summary>
+        /// Obtiene un medicamento por su identificador.
+        /// </summary>
+        /// <param name="id">Identificador del medicamento.</param>
+        /// <returns>Medicamento encontrado.</returns>
         [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<Medicamento>> GetMedicamento(Guid id)
         {
-            var medicamento = await _repository.GetByIdAsync(id);
+            var medicamento = await _service.GetByIdAsync(id);
 
             if (medicamento == null)
                 return NotFound();
@@ -34,12 +49,22 @@ namespace FARMACIA.Controllers
             return medicamento;
         }
 
+        /// <summary>
+        /// Registra un nuevo medicamento.
+        /// </summary>
+        /// <param name="medicamento">Datos del medicamento.</param>
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<Medicamento>> PostMedicamento(Medicamento medicamento)
         {
-            medicamento.Id = Guid.NewGuid();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            await _repository.AddAsync(medicamento);
+            await _service.AddAsync(medicamento);
 
             return CreatedAtAction(
                 nameof(GetMedicamento),
@@ -47,21 +72,43 @@ namespace FARMACIA.Controllers
                 medicamento);
         }
 
+        /// <summary>
+        /// Actualiza un medicamento existente.
+        /// </summary>
+        /// <param name="id">Identificador del medicamento.</param>
+        /// <param name="medicamento">Datos actualizados.</param>
         [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> PutMedicamento(Guid id, Medicamento medicamento)
         {
-            if (id != medicamento.Id)
-                return BadRequest();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            await _repository.UpdateAsync(medicamento);
+            if (id != medicamento.Id)
+            {
+                return BadRequest("El ID de la URL no coincide con el ID del medicamento.");
+            }
+
+            await _service.UpdateAsync(medicamento);
 
             return NoContent();
         }
 
+        /// <summary>
+        /// Elimina un medicamento por su identificador.
+        /// </summary>
+        /// <param name="id">Identificador del medicamento.</param>
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> DeleteMedicamento(Guid id)
         {
-            await _repository.DeleteAsync(id);
+            await _service.DeleteAsync(id);
 
             return NoContent();
         }
